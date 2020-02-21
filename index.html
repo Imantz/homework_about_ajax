@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>InterviewTask</title>
+</head>
+
+<body>
+<form onsubmit="return submit_send_and_show()">
+    <table>
+        <thead>
+        <tr>
+            <td>Name</td><td>Email</td><td>Phone Number</td>
+        </tr>
+        </thead>
+        <tbody id="table_body">
+        <tr>
+            <td><input type="text" id="id_name_1" name="name_1" /></td>
+            <td><input type="text" id="id_email_1" name="email_1" /></td>
+            <td><input type="text" id="id_phone_1" name="phone_1" /></td>
+        </tr>
+        </tbody>
+    </table>
+    <br />
+    <br />
+    <input type="button" id="add_another" value="Add Another Line" />&nbsp;&nbsp;<input type="submit"/>
+</form>
+
+<div id="ajax_results_here"></div>
+<script>
+
+
+    // Listen for click event and @click adds new row with contact input fields
+
+    document.getElementById("add_another").addEventListener("click",add_another_row);
+
+
+    //Add contact row to tbody ( parrent element )
+
+    function add_another_row(){
+
+
+        //gets table body tag.
+
+        var table_body = document.getElementById("table_body");
+
+
+        //Get count of tbody childs and add one to get next  table_row child id.
+
+        var id = table_body.childElementCount + 1;
+
+
+        //tabble row. this will be inserted into html. (i know ````` and ${} is not for vanilla js. but for this time will look nicer)
+
+        var table_row = `
+
+        <tr>
+            <td><input type="text" id="id_name_${id}" name="name_${id}" /></td>
+            <td><input type="text" id="id_email_${id}" name="email_${id}" /></td>
+            <td><input type="text" id="id_phone_${id}" name="phone_${id}" /></td>
+        </tr>
+
+        `;
+
+
+        // Insert new row into table body ( tbody ) before tbody end tag .
+
+        table_body.insertAdjacentHTML('beforeend', table_row);
+
+    }
+
+
+    //get input field values.
+
+    function get_user_contact_info()
+    {
+
+        // check for input field row count
+
+        var user_contact_info_row_count = document.getElementById("table_body").childElementCount;
+
+
+        //Store in array all user contact info objects
+
+        var user_contact_info = [];
+
+
+        //collect each user contact info values and save as object.
+        // each object put into user_contact_info array.
+
+        for(var i = 1 ; i <= user_contact_info_row_count; i++)
+        {
+            user_contact_info.push(
+               {
+                    "name": document.getElementById("id_name_" + i).value,
+                    "email": document.getElementById("id_email_" + i).value,
+                    "phone": document.getElementById("id_phone_" + i).value,
+                }
+            )
+        }
+
+        return user_contact_info;
+    }
+
+
+    // submit data, collect data and append into "ajax_results_here" container
+
+    function submit_send_and_show()
+    {
+
+        //Convert contact info array to string.
+
+        var users_contact_info = JSON.stringify(get_user_contact_info());
+
+
+        //Make new API object
+
+        var xhttp = new XMLHttpRequest();
+
+
+        // Convert response string to JSON
+        // Append all contact info into "ajax_results_here" container.
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+
+                // Every time when press submit. this clear list of user contact details.
+
+                document.getElementById("ajax_results_here").innerHTML = "";
+
+
+                //Append all results into "ajax_results_here" container.
+
+                JSON.parse(this.responseText).forEach(function (obj){
+                    document.getElementById("ajax_results_here").insertAdjacentHTML('beforeend', html_template_for_user_row(obj));
+                })
+            }
+        };
+
+
+        //Send all input field data to return_data.php
+
+        xhttp.open("POST", "return_data.php", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("data=" + users_contact_info);
+
+
+        //while return false - page will not make refresh on submit.
+
+         return false;
+    }
+
+
+    //small template for better view when get back user row.
+
+    function html_template_for_user_row(user)
+    {
+        return `
+        <ul>
+            <li>${user.name}</li>
+            <li>${user.email}</li>
+            <li>${user.phone}</li>
+        </ul>
+        `
+    }
+
+
+</script>
+</body>
+</html>
+
